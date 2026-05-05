@@ -1,8 +1,52 @@
-# AB-testing-practice
-### Data from: https://www.kaggle.com/datasets/adarsh0806/ab-testing-practice
-## Overview
-## Business Problem & Experiment Design
-## Data Description
-## Methodology & Key Findings
-## How to reproduce
-## Limitation & Next Steps
+# A/B Testing: White Screen vs. Black Screen
+## 项目简介
+本项目模拟了一个英国零售网站的 A/B 测试，旨在回答：**“将网站背景从白色改为黑色，能否提高用户转化率？”**  
+通过对比对照组（A 组，白色背景）和实验组（B 组，黑色背景）的用户行为数据，我们评估了新设计的效果。
+## 数据集
+- **来源**：https://www.kaggle.com/datasets/adarsh0806/ab-testing-practice
+- **描述**：包含 5000 名用户在实验期间的访问记录，字段包括：
+  - `User ID`：用户唯一标识
+  - `Group`：A（对照组） / B（实验组）
+  - `Page Views`：浏览页面数
+  - `Time Spent`：停留时长（秒）
+  - `Conversion`：是否转化（Yes/No）
+  - `Device`：设备类型（Desktop / Mobile）
+  - `Location`：英国地区（England, Scotland, Wales, Northern Ireland）
+> **注意**：根据事前功效分析，每组最小样本量应达到约 60,669 人，当前数据量远未达标，因此分析结果**仅作练习参考**，不可用于真实商业决策。
+## 分析方法
+1. **数据预处理**  
+   - 新增数值型转化列 `converted`  
+   - 重命名列名为下划线风格  
+   - 类型转换、缺失值与重复值检查  
+2. **随机化检验**  
+   使用卡方检验验证 `Group` 与 `Device`、`Location`、`Page Views`、`Time Spent` 的独立性，确认分组随机（所有 p > 0.05）。
+3. **转化率分析**  
+   - **整体比较**：单侧比例 Z 检验 + Bootstrap 重抽样（5000 次）  
+   - **分群组分析**：按设备、地区细分，分别检验实验效果  
+   - **交互作用**：双因素方差分析（Two-way ANOVA）探究设备/地区是否与实验组存在交互效应
+4. **次要指标分析**  
+   比较两组在 `Page Views` 和 `Time Spent` 上的差异，使用 Mann-Whitney U 非参数检验（因数据不满足正态性）。
+
+## 主要发现
+### 1. 转化率显著提升
+| 指标 | A 组（白） | B 组（黑） | 提升 |
+|------|-----------|-----------|------|
+| 转化率 | 5.40% | 14.07% | **+8.67 百分点 (p < 0.001)** |
+
+- Z 检验：z = -10.35, p ≈ 2.0e-25（单侧）  
+- Bootstrap 稳健性检验：95% CI [7.05%, 10.27%]，p = 0.000  
+- 相对提升幅度：约 **160.5%**
+
+### 2. 效果在不同设备/地区上保持一致
+- **按设备**：移动端提升 188%，桌面端提升 137%，两者均显著。  
+- **按地区**：四个地区均显著，提升幅度在 112%～217% 之间。  
+- **交互作用**：ANOVA 显示 `Group` 主效应显著（p < 0.001），设备/地区主效应及交互项均不显著（p > 0.05），说明实验效果稳定，不受设备或地域影响。
+
+### 3. 对页面浏览量和停留时长无显著影响
+- `Page Views`：两组均值约 7.5 页，Mann-Whitney U 检验 p = 0.42  
+- `Time Spent`：两组均值约 242 秒，Mann-Whitney U 检验 p = 0.64  
+- Bootstrap 置信区间均跨越 0，说明无统计学差异。黑色背景在提升转化率的同时，**没有损害用户的浏览深度和停留时长**。
+
+## 结论
+在模拟数据上，黑色背景方案显著提升了用户转化率，且该效果在不同设备和地区群体中稳定存在，同时对非转化指标无负面影响。  
+**建议**：在进一步扩大样本量验证后，可考虑将黑色背景作为默认设计上线。
